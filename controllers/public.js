@@ -1,6 +1,10 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user");
+const roleModel = require("../models/role");
+const projectModel = require("../models/project");
+const role = require("../models/role");
+
 exports.sigin = async (req, res, next) => {
   const {
     body: { email, password },
@@ -78,6 +82,60 @@ exports.signup = async (req, res, next) => {
   }).save();
   console.log("this is sign up function");
   return res.status(200).send("user created");
+};
+
+exports.showPerticcularProject = async (req, res, next) => {
+  const { projectId } = req.body;
+
+  //if peoject id is not there then return
+  if (!projectId) {
+    res.send("seelct project you want to watch");
+  }
+  try {
+    const projectData = await projectModel.findOne({ _id: projectId });
+
+    if (!projectData) {
+      return res.send("no project found with this id");
+    }
+    const roleData = await roleModel.find({ projectId: projectData._id });
+
+    console.log("role of list ", roleData);
+
+    // Add role data to projectData
+    // projectData.roles = roleData;
+    const newProjectData = { projectData, role: roleData };
+
+    // Send the updated project data as a response
+
+    console.log("project data ", newProjectData);
+    if (projectData.status === "Active") {
+      console.log("status ", projectData.status);
+      return res.status(200).send(projectData);
+      // res.status(200).send("role Data ", roleData);
+    }
+
+    if (projectData.createdBy !== req.payload.userId) {
+      return res
+        .status(300)
+        .send(
+          "as you have not created this project and project is still in a drafting process because of that you are not allowd to access or watch this  project "
+        );
+    }
+    // return res.status(200).send(projectData);
+    res.json(projectData);
+  } catch (error) {
+    return res.error(error);
+  }
+
+  // const projectData = await projectModel.findOne({ _id: projectId });
+  // const roleData = await roleModel.find({ projectId: projectData._id });
+  // projectData.roles = roleData;
+
+  // Now you can use projectData with the roles included
+  // console.log(projectData);
+  // projectData.role = roleData;
+
+  // return res.status(200).send(projectData);
 };
 
 const validateEmail = (email) => {

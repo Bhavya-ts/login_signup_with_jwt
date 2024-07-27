@@ -46,6 +46,7 @@ exports.addRole = async (req, res, next) => {
   }).save();
   return res.send("Role succesfully added");
 };
+
 exports.editProject = async (req, res, next) => {
   const { projectId, name, description, status } = req.body;
 
